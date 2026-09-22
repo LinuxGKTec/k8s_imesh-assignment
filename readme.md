@@ -152,7 +152,7 @@ Endpoint exists (`10.244.1.5`), confirming service label selectors match pod lab
 # Phase 4: Service Definition Inspection
 Inspect the full spec details for `backend-svc`.
 
-
+```
 kubectl describe svc backend-svc 
 
 Name:              backend-svc
@@ -170,6 +170,7 @@ TargetPort:        8081/TCP
 Endpoints:         10.244.1.5:8081
 Session Affinity:  None
 Events:            <none>
+```
 
 The service is configured to forward incoming port `80` traffic to `targetPort: 8081`. However, `backend` application process is listening on `8080`. 
 
@@ -178,37 +179,39 @@ The service is configured to forward incoming port `80` traffic to `targetPort: 
 The `backend-svc` Service specification contained an incorrect `targetPort` configuration (`8081` instead of `8080`). 
 
 
-
 ### ***Resolutions***:
 To fix this issue we need to correct targetport in backend-svc and this i can do it in multiple way for example by rereating backend svc with coorect target port or by patching backend-svc  svc with correct target port.
 
-
+```
 Mac:Kubernates gautamkumar$ kubectl patch svc backend-svc --type='json' -p='[{"op": "replace", "path": "/spec/ports/0/targetPort", "value": 8080}]'
 service/backend-svc patched
+```
 
 At this point issue has been fixed and frontend and backend sarted communicating.
 
-
+```
 Mac:Kubernates gautamkumar$ kubectl exec  deployment/frontend -- curl  -s http://backend-svc
 hello from backend
-
+```
 
 ### ***Verification**
 
 #### Step 1: Verify Endpoint Port Mapping
-
+```
 Mac:Kubernates gautamkumar$ kubectl get endpoints backend-svc 
 Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
 NAME          ENDPOINTS         AGE
 backend-svc   10.244.1.5:8080   3h8m
-
+```
 
 #### Step 2: Verify Internal Service Communication (`frontend` -> `backend-svc`)
-
+```
 kubectl exec deployment/frontend -- curl -s http://backend-svc
 hello from backend
+```
 
 #### Step 3: End-to-End Client Flow Verification (`client` -> `frontend` -> `backend`)
+```
 kubectl exec client -- curl -s http://frontend-svc
 
 <!DOCTYPE html>
@@ -238,10 +241,10 @@ security features and capabilities please refer to
 <p><em>Thank you for using nginx.</em></p>
 </body>
 </html>
-
+```
 
 ## ***Repository Layout**
-
+```
 .
 ├── Kind_Infra
 │   ├── kind-cluster.yaml
@@ -250,3 +253,4 @@ security features and capabilities please refer to
 │   ├── deployment.yaml
 │   └── service.yaml
 └── readme.md
+```
