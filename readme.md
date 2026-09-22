@@ -5,7 +5,33 @@ This repository contains the manifests, Infra setup, and incident post-mortem fo
 
 ### Application Architecture
 
-`[ client Pod ] ──(HTTP)──> [ frontend-svc ] ──(HTTP)──> [ backend-svc ] ──> [ backend Pod ]`
+```text
+  +-----------------+
+  |   client Pod    |
+  +--------+--------+
+           |
+           | HTTP
+           v
+  +-----------------+
+  |  frontend-svc   |
+  +--------+--------+
+           |
+           v
+  +-----------------+
+  |  frontend Pod   |
+  +--------+--------+
+           |
+           | HTTP (Port 80 -> TargetPort 8080)
+           v
+  +-----------------+
+  |   backend-svc   |
+  +--------+--------+
+           |
+           v
+  +-----------------+
+  |   backend Pod   |
+  +-----------------+
+```
 
 
 * Client: Interactive pod used to initiate client-side traffic (`curlimages/curl`).
