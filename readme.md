@@ -5,7 +5,7 @@ This repository contains the manifests, Infra setup, and incident post-mortem fo
 
 ### Application Architecture
 
-[ client Pod ] ──(HTTP)──> [ frontend-svc ] ──(HTTP)──> [ backend-svc ] ──> [ backend Pod ]
+`[ client Pod ] ──(HTTP)──> [ frontend-svc ] ──(HTTP)──> [ backend-svc ] ──> [ backend Pod ]`
 
 
 * Client: Interactive pod used to initiate client-side traffic (`curlimages/curl`).
@@ -25,31 +25,32 @@ Step 1: Create Kind Cluster
 
 Create a multi-node cluster using the bash script kind_up.sh that i have wrriten under Kind_Infra folder. Script kind_up.sh run based on kind-cluster.yaml menifest file.
 
-cd Kind_Infra
-bash kind-up.sh
-Mac:IMesh_Assignment gautamkumar$ kind get clusters
-imesh-tech
+`cd Kind_Infra`
+`bash kind-up.sh`
+
+`Mac:IMesh_Assignment gautamkumar$ kind get clusters`
+`imesh-tech`
 
 
 Step 2: Deploy Workloads & Services
 
 Apply all application manifests into the default namespace:
 
-kubectl apply -f Menifest/deployment.yaml
-kubectl apply -f Menifest/service.yaml
+`kubectl apply -f Menifest/deployment.yaml`
+`kubectl apply -f Menifest/service.yaml`
 
 
 Verify that all pods reach `Running` state:
 
-kubectl get pods -o wide
+`kubectl get pods -o wide`
 
 Step 3: Verify Baseline Health
 
 Before injecting the fault, verify baseline connectivity across all tiers:
 
 1. Verify Client -> Frontend
-kubectl exec client -- curl -s http://frontend-svc
-
+`kubectl exec client -- curl -s http://frontend-svc`
+```bash
 Mac:IMesh_Assignment gautamkumar$ kubectl exec client -- curl -s http://frontend-svc
 <!DOCTYPE html>
 <html>
@@ -78,8 +79,10 @@ security features and capabilities please refer to
 <p><em>Thank you for using nginx.</em></p>
 </body>
 </html>
+```
 
 2. Verify Frontend -> Backend
+
 Mac:Kubernates gautamkumar$ kubectl exec  deployment/frontend -- curl -v -s http://backend-svc
 * Host backend-svc:80 was resolved.
 * IPv6: (none)
