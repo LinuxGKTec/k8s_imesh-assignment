@@ -82,7 +82,7 @@ security features and capabilities please refer to
 ```
 
 2. Verify Frontend -> Backend
-
+``` bash
 Mac:Kubernates gautamkumar$ kubectl exec  deployment/frontend -- curl -v -s http://backend-svc
 * Host backend-svc:80 was resolved.
 * IPv6: (none)
@@ -92,33 +92,37 @@ Mac:Kubernates gautamkumar$ kubectl exec  deployment/frontend -- curl -v -s http
 * Failed to connect to backend-svc:80 after 14 ms: Could not connect to server
 * closing connection #0
 command terminated with exit code 7
+```
+
 
 So we can see frontend can not communicate with backend.
-
 
 3. Troubleshooting to find the root case of this issue.
 
 To find the root cause i will start investigation from pod level.
 # Phase 1: Pod Status & Workload Health
 
+``` bash
 Mac:Kubernates gautamkumar$ kubectl  get pods -o wide
 NAME                       READY   STATUS    RESTARTS        AGE    IP           NODE                NOMINATED NODE   READINESS GATES
 backend-565c56b855-6rb6j   1/1     Running   0               139m   10.244.1.5   imesh-tech-worker   <none>           <none>
 client                     1/1     Running   1 (8m53s ago)   139m   10.244.1.6   imesh-tech-worker   <none>           <none>
 frontend-576fbd7c-bsz8f    1/1     Running   0               139m   10.244.1.4   imesh-tech-worker   <none>           <none>
+```
 
 All pods are `Running` with valid pod IPs. Outage is not caused by a crashed container or pod crash-loop.
 
 # Phase 2. DNS & Service Discovery
 Verify if `frontend` can resolve the internal `backend-svc` domain via CoreDNS.
-
+```
 Mac:Kubernates gautamkumar$ kubectl  get svc -o wide
 NAME           TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE     SELECTOR
 backend-svc    ClusterIP   10.96.67.151   <none>        80/TCP         139m    app=backend
 frontend-svc   NodePort    10.96.1.135    <none>        80:30080/TCP   139m    app=frontend
 kubernetes     ClusterIP   10.96.0.1      <none>        443/TCP        4h10m   <none>
+```
 
-
+```
 kubectl exec deployment/frontend -- nslookup backend-svc
 
 Server:		10.96.0.10
@@ -126,19 +130,22 @@ Address:	10.96.0.10#53
 
 Name:	backend-svc.default.svc.cluster.local
 Address: 10.96.67.151
+```
 
 DNS resolution is operating correctly. `backend-svc` resolves to ClusterIP `10.96.67.151`.
 
 # Phase 3. Service Endpoints Check
 
 Verify if the service selector is correctly discovering backing pods and registering endpoints
-
+```
 Mac:Kubernates gautamkumar$ kubectl get endpoints
 Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
 NAME           ENDPOINTS         AGE
 backend-svc    10.244.1.5:8081   141m
 frontend-svc   10.244.1.4:80     141m
 kubernetes     172.18.0.2:6443   4h12m
+
+```
 
 Endpoint exists (`10.244.1.5`), confirming service label selectors match pod label but I can see that backend-svc endpoint is pointing to wrong targetport 8081. Same we can verify by describring the service with following command.
 
