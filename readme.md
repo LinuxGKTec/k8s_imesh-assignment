@@ -107,23 +107,57 @@ security features and capabilities please refer to
 ```
 
 Verify Frontend -> Backend
-
-``` bash
-Mac:Kubernates gautamkumar$ kubectl exec  deployment/frontend -- curl -v -s http://backend-svc
-* Host backend-svc:80 was resolved.
-* IPv6: (none)
-* IPv4: 10.96.67.151
-*   Trying 10.96.67.151:80...
-* connect to 10.96.67.151 port 80 from 10.244.1.4 port 37502 failed: Connection refused
-* Failed to connect to backend-svc:80 after 14 ms: Could not connect to server
-* closing connection #0
-command terminated with exit code 7
+```
+kubectl exec  deployment/frontend -- curl -v -s http://backend-svc
+Established connection to backend-svc (10.96.26.19 port 80) from 10.244.1.5 port 42660 
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: backend-svc
+> User-Agent: curl/8.22.0
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 200 OK
+< X-App-Name: http-echo
+< X-App-Version: 1.0.0
+< Date: Tue, 22 Sep 2026 17:19:21 GMT
+< Content-Length: 19
+< Content-Type: text/plain; charset=utf-8
+< 
+{ [19 bytes data]
+* Connection #0 to host backend-svc:80 left intact
+hello from backend
 ```
 
 
-So we can see frontend can not communicate with backend.
+So we can see frontend can communicate with backend.
 
-# Step 4Troubleshooting to find the root case of this issue.
+At this point:
+
+client → frontend SUCCESS
+frontend → backend SUCCESS
+
+As per assignment now i will create one intentional networking issue by changing targetport to 8081 under backend service by patching it.
+```
+kubectl patch svc backend-svc --type='json' -p='[{"op": "replace", "path": "/spec/ports/0/targetPort", "value": 8081}]'
+service/backend-svc patched
+```
+Now againg i will frontend → backend by command `kubectl exec  deployment/frontend -- curl -v -s http://backend-svc`
+```
+kubectl exec  deployment/frontend -- curl -v -s http://backend-svc
+*   Trying 10.96.26.19:80...
+* connect to 10.96.26.19 port 80 from 10.244.1.5 port 60984 failed: Connection refused
+* Host backend-svc:80 was resolved.
+* IPv6: (none)
+* IPv4: 10.96.26.19
+* Failed to connect to backend-svc:80 after 29 ms: Could not connect to server
+* closing connection #0
+command terminated with exit code 7
+```
+At this point frontend → backend connectivity stopped.
+
+
+# Step 4 Troubleshooting to find the root case of this issue.
 
 To find the root cause i will start investigation from pod level.
 # Phase 1: Pod Status & Workload Health
@@ -209,7 +243,7 @@ The `backend-svc` Service specification contained an incorrect `targetPort` conf
 To fix this issue we need to correct targetport in backend-svc and this i can do it in multiple way for example by rereating backend svc with coorect target port or by patching backend-svc  svc with correct target port.
 
 ```
-Mac:Kubernates gautamkumar$ kubectl patch svc backend-svc --type='json' -p='[{"op": "replace", "path": "/spec/ports/0/targetPort", "value": 8080}]'
+kubectl patch svc backend-svc --type='json' -p='[{"op": "replace", "path": "/spec/ports/0/targetPort", "value": 8080}]'
 service/backend-svc patched
 ```
 

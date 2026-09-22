@@ -8,7 +8,7 @@ spec:
     app: backend
   ports:
   - port: 80
-    targetPort: 8081
+    targetPort: 8080
 ---
 # Frontend service
 apiVersion: v1
@@ -23,4 +23,3 @@ spec:
   - port: 80
     nodePort: 30080
     targetPort: 80
-
