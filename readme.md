@@ -50,21 +50,20 @@ This repository contains the manifests, Infra setup, and incident post-mortem fo
 # Step 1: Create Kind Cluster
 
 Create a multi-node cluster using the bash script kind_up.sh that i have wrriten under Kind_Infra folder. Script kind_up.sh run based on kind-cluster.yaml menifest file.
-
-`cd Kind_Infra`
-`bash kind-up.sh`
-
-`Mac:IMesh_Assignment gautamkumar$ kind get clusters`
-`imesh-tech`
-
+```
+cd Kind_Infra
+bash kind-up.sh
+Mac:IMesh_Assignment gautamkumar$ kind get clusters
+imesh-tech
+```
 
 # Step 2: Deploy Workloads & Services
 
 Apply all application manifests into the default namespace:
-
-`kubectl apply -f Menifest/deployment.yaml`
-`kubectl apply -f Menifest/service.yaml`
-
+```
+kubectl apply -f Menifest/deployment.yaml
+kubectl apply -f Menifest/service.yaml
+```
 
 Verify that all pods reach `Running` state:
 
@@ -76,7 +75,6 @@ Before injecting the fault, verify baseline connectivity across all tiers:
 
 Verify Client -> Frontend
 
-`kubectl exec client -- curl -s http://frontend-svc`
 ```bash
 Mac:IMesh_Assignment gautamkumar$ kubectl exec client -- curl -s http://frontend-svc
 <!DOCTYPE html>
@@ -125,7 +123,7 @@ command terminated with exit code 7
 
 So we can see frontend can not communicate with backend.
 
-# Step 4 Troubleshooting to find the root case of this issue.
+# Step 4Troubleshooting to find the root case of this issue.
 
 To find the root cause i will start investigation from pod level.
 # Phase 1: Pod Status & Workload Health
